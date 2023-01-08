@@ -1,0 +1,379 @@
+50 return
+201 start
+
+Interstellar:
+080 evolved creature
+  081 Game over
+  082 Game over
+  083 -1/3 creatures
+  084 random kills
+061 renegade traders
+  169 boarding
+   203 -1 each type of tool
+   183 +1 month/game over
+    191 +1d6 month dalay 1d6 characters killed
+055 brain damage
+049 9-INT months
+046 +1 month
+001 >2 hexes +1 month time
+044 +1-4 month
+047 9-INT months
+052 -1 creature
+058 crazy science officer
+  067 +1 month delay
+  073 eliminated
+  144 +0-4 month dalay, possible another infected
+064 passing Opoplo -> 0817/076
+
+
+Encounter strategy
+
+com cap fle
+010 011 012
+013 014 015
+016 017 018*
+019 020 018
+019 020 018
+016 017 018*
+016 023 021
+022 023 021
+025 026 024
+
+Alien Artifacts
+004 6 Living Structure x3 - 187/193
+006 5 Alien Weapon x5 - 175
+030 5 Globe x5
+036 6 Sculpture x5
+042 5 Egg x5 - 178(creature hatches)/185->161/034
+
+028 x4 - 189
+034 x2 - 195/199/204
+040 x2
+161 x3 - 222/231/225
+172 x2 - 158/228
+
+Expedition encounter:
+
+053
+- cliff || abyss -> 008
+- alienstrucure -> 004
+- flat && saharan -> 031
+- oppressive && tropical -> 153
+056
+- flowinglavaadj -> 038
+- alienstrucure -> 004
+- heavyveg -> 027
+- flat && 50% -> 151
+059
+- alienstrucure -> 028
+- pond || marsh -> 039
+- cave && (50% || 75%) -> 147
+062
+- alienstrucure -> 030
+- oppressive && lightveg -> 179
+- heavy && hill && !veg -> 066
+065
+- aliencity -> 030
+- cliff -> 170
+- underwater && veg -> 075
+068
+- alienstrucure -> 004
+- heavyveg -> 173
+- marsh -> 181
+
+071
+- alienstrucure -> 042
+- nearwl -> 051
+- poisonous -> 043
+074
+- alienstrucure -> 028
+- flat && (heavy || oppressive) -> 009
+- cave -> 057
+078
+- alienstrucure -> 006
+- flat && tropical -> 009
+- (marsh || pond || river) && tropical -> 005
+120
+- alienstrucure -> 006
+- cave && (thin || normal) -> 181
+- (flat || hill) && !arctic -> 060
+100
+- landing hex -> 002
+- alienstrucure -> 006
+- veg && (heavy || oppressive) -> 207
+- heavyveg && thin -> 005
+110
+- aliencity -> 028
+- (flat || hill) && nearwl -> 159
+- abyss 176
+
+130
+- nearwl || oppressive -> 166
+- aliencity -> 042
+- underwater -> 142
+- heavyveg -> 029
+140
+- aliencity -> 006
+- marsh && (normal || poisonous) -> 003
+- glacial && earthlike -> 170
+143
+- aliencity -> 006
+- flat && lightveg && (50% || 75%) -> 003
+- cave && (poisonous || corrosive) -> 162
+146
+- alienstrucure -> 030
+- cave -> 045
+- hill && lightveg && heavy -> 179
+150
+- alienstrucure -> 030
+- cave && (light || earthlike) -> 045
+- solid lava -> 162
+154
+- aliencity -> 040
+- flat && lightveg && normal -> 156
+- flat && none -> 167
+
+
+157
+- aliencity -> 030
+- glacial -> 072
+- lightveg -> 054
+- active -> 032
+160
+- alienstrucure -> 036
+- flat && veg && heavy -> 060
+- corrosive && saharan -> 153
+165
+- alienstrucure -> 036
+- lightveg && earthlike -> 145
+- hill && 25% -> 151
+168
+- pond modifier used -> 152
+- aliencity -> 036
+- glacial -> 041
+- flat && !veg && normal -> 066
+171
+- aliencity -> 036
+- lightveg && light -> 145
+- mountain -> 147
+174
+- aliencity -> 161
+- veg && tropical -> 048
+- flat && !veg -> 167
+
+177
+- aliencity -> 042
+- mountain && (nearwl || light) -> 007
+- veg && tropical -> 149
+182
+- no characters in the shuttle -> 163
+- aliencity -> 036
+- (mountain || cliff) && arctic -> 041
+- corrosive -> 043
+184
+- (corrosive || poisonous) && hasbot -> 155
+- alienstrucure -> 042
+- hill && saharan -> 031
+- heavyveg -> 029
+186
+- alienstrucure -> 042
+- heavyveg && normal -> 027
+- underwater || underground) && light -> 051
+188
+- unexplored aliencity anywhere -> 034
+- marsh && (poisonous || corrosive) -> 039
+- underwater -> 142
+190
+- aliencity -> 172
+- heavyveg -> 037
+- mountain && none -> 164
+
+192
+- aliencity -> 161
+- heavyveg && light -> 037
+- (mountain || cliff) && none -> 159
+194
+- aliencity -> 172
+- liquid -> 063
+- river && tropical -> 069
+196
+- aliencity -> 161
+- glacial && (light || earthlike) -> 079
+- veg && temperate -> 048
+198
+- aliencity -> 040
+- underwater -> 077
+- veg && normal -> 079
+200
+- aliencity -> 028
+- underwater && (cliff || abyss) -> 077
+- lightveg && (thin || normal) -> 035
+202
+- aliencity -> 034
+- flat && lightveg && earthlike -> 035
+- moltenlava && saharan -> 057
+
+
+Creatures:
+145 
+060
+142
+039
+029 +3
+007 +5
+051
+043
+149 +5
+072 +3
+045
+003
+054 +2
+005 +2
+033 +3
+075 +2
+208
+009
+057 +2
+035
+027
+077
+079
+031
+063 +4
+147
+041
+037
+048
+069 +3
+151 +2
+153
+156 +2
+159
+162
+167 +2
+170
+179
+181
+
+
+
+
+
+
+
+Planet table: 085-113/110/100
+
+            GAHGL       123           45            6 
+
+Korkran 1:  LP3Q1  MapC 1502/125 MapI 1721/131 MapA 0306/132
+        2:  EN2Q0  MapC 1803/134 MapI 1520/122 MapH 1117/138
+        3:  HN4Q0  MapA 0306/132 MapA 0302/123 MapA 0504/114
+Picole  1:  NP1Q2  MapD 0412/119 MapB 0806/115 MapC 1404/116
+        2:  NN1Q3  MapB 0806/124 MapD 0213/137 MapC 1502/125
+        3:  LT2Q1  MapI 1520/122 MapC 1404/116 MapD 0213/137
+Suwathe 1:  EC3Q2  MapC 1803/134 MapI 1520/122 MapA 0306/132
+        2:  HP4A1  MapA 0302/123 MapA 0306/132 MapA 0504/114
+        3:  HC2A3  MapC 1502/125 MapF 1712/127 MapD 0413/128
+Opoplo  1:  HN2Q0  MapI 1721/131 MapE 1109/117 MapH 1117/138
+        2:  OP2Q4  MapC 1404/116 MapI 1320/139 MapH 1117/138
+        3:  OC0Q4  MapB 0806/115 MapB 1106/141 MapE 0909/126
+Mezo    1:  EN0Q4  MapE 1109/117 MapB 0806/124 MapB 0806/115
+        2:  HT1Q2  MapE 1109/117 MapB 0806/124 MapD 0412/119
+        3:  HP2A3  MapD 0412/119 MapF 1411/136 MapI 1320/139
+Paleo   1:  ET0A4  MapB 1002/133 MapH 0816/121 MapF 1411/136
+        2:  HN1A1  MapF 1513/118 MapH 1120/129 MapD 0413/128
+        3:  HC0A4  MapH 0816/121 MapB 1002/133 MapF 1411/136
+Briss   1:  LN0A4  MapE 1109/117 MapB 0806/115 MapF 1712/127
+        2:  ET0A2  MapE 1109/117 MapF 1712/127 MapE 0909/126
+        3:  HP0A4  MapF 1712/127 MapE 1109/117 MapE 0808/135
+Mephisto1:  LN0A2  MapF 1513/118 MapB 1002/133 MapD 0413/128
+        2:  EP0A4  MapB 1002/133 MapF 1513/118 MapF 1411/136
+        3:  HP1A3  MapH 1120/129 MapF 1513/118 MapF 1411/136
+New Alto1:  LT0Q3  MapD 0412/119 MapB 0806/124 MapE 0909/126
+        2:  EN1A1  MapD 0412/119 MapB 1106/141 MapI 1520/122
+        3:  HP2A3  MapC 1404/116 MapH 1120/129 MapI 1320/139
+
+MapA: Korkran, Suwathe
+114 - submerged
+123 - submerged, Alien city = strucure, structure = 0
+132 - Tr, No alien city or strucure, vegetation above surface
+MapB:
+115 - A, LS + 1
+124 - Te
+133 - S, LS + 1,  No caves
+141 - Te, FOG
+MapC:
+116 - Te
+125 - Tr
+134 - Tr
+MapD:
+119 - Te, no alien city
+128 - S, LS + 1
+137 - Tr
+MapE:
+117 - A, LS + 1, Alien city = glacial
+126 - A, LS + 1, Alien city only in the center
+135 - A, LS + 1
+MapF:
+118 - S, LS + 1
+127 - Te
+136 - Tr
+MapH:
+121 - S, LS + 1
+138 - Te
+129 - Tr, No caves
+MapI:
+122 - Tr
+131 - Te
+139 - A, LS + 1, FOG, rivers frozen, marsh = glacial
+
+
+1-7   ABC 1-6,7-12,13-18
+8-14  DEF
+15-21 GHI
+
+
+076 - Te, alien structure to explore on 0715, 1016 no need to explore landing
+
+
+Communicate: 1d+IntM-abs(AgrM)
+010
+ Agr > 4 ? 12dmg : Spd > ExpSpdMax ? (cmb || 0) : 0
+013
+ Agr > 5 ? cmb(scienceO?-1:-2) : Spd > ExpSpdMax ? (cmb || 0) : 0
+016*?
+ (comander || science ? 1hr : 3hr), (cmb || fle)
+019
+ 1hr, Int > 6 || AgrM == -3 ? 0 : AgrM < 2 ? 1 : cmb
+022
+ Int > 7 ? (6VP, 1hr) : cmb(kill=cap)
+025
+ Int > 7 ? (7-11VP, 2hr) :  cmb(kill=cap)
+
+Kill/Capture: 1d+IntM+AgrM
+011
+ 1
+014
+ Agr < 6 && Spd > ExpSpdMax + 1 ? 0 : cmb(-IntM)
+017*
+ Agr > 5 ? cmb(-1:0) : Spd > ExpSpdMax ? 0 : cmb
+020
+ cmb(2*sign(IntM+AgrM+SpdM))
+023
+ Agr > 4 ? cmb(-max(SpdM,IntM)) : Spd > ExpSpdMax ? 0 : cmb
+026
+ Agr > 3 ? cmb(-max(AgrM,IntM,SpdM),Endurance loss) : 2hr
+
+Flee: 1d+ArgM
+012
+ 1
+015
+ Spd > ExpSpdMin + 1 ? cmb : 1hr
+018*?
+ Spd > ExpSpdMin  ? cmb(-1,no capture) : 2hr
+021
+ Spd > ExpSpdMin - 1 ? cmb(-2,no capture) : 3hr
+024
+ Spd > ExpSpdMin - 2 ? cmb(-2, Endurance loss, no capture) : 4hr
+ 
+ 
