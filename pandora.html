@@ -4,18 +4,23 @@
 </head>
 <body>
 <style>
-div.log {
-   margin-left: auto;
-    margin-right: auto;
- width: 50%;
- font-family: sans-serif;
+body {
+font-family: sans-serif;
+}
+div.mdiv {
+float: left;
+width: 33%;
 }
 </style>
-<div id="log" class="log">
+<div style="width: 99%;">
+ <div id="map" class="mdiv">Left Stuff</div>
+ <div id="log" class="mdiv"></div>
+ <div id="inv" class="mdiv">Right Stuff</div>
+ <br style="clear: left;" />
 </div>
 <script>
 function pandora_log(num, txt) {
-document.getElementById("log").innerHTML += '<p>' + txt + '</p>';
+state.log += '<p>' + txt + '</p>';
 }
 
 //specibot = 76937
@@ -182,8 +187,9 @@ function victoryPoints() {
     }
     for (var i in state.worlds_visited) if (state.worlds_visited.hasOwnProperty(i))
 	result++;
-    if (state.month < 0)
-	result += state.month * 5;
+    if (state.months < 0)
+	result += state.months * 5;
+    return result;
 }
 var member_names = {
  cmd: 'commander',
@@ -198,6 +204,7 @@ var state;
 
 function p000() {
 state = {
+ log:'',
  team: {
   cmd: { cac:3,kic:3,wht:5,prt:5,spd:8,end:6 },
   nav: { cac:3,kic:2,wht:6,prt:6,spd:7,end:6 },
@@ -232,20 +239,21 @@ for(i in {botkit:1,toolkit:1,medkit:1,scanner:1,turbolaser:1,netgun:1,climbkit:1
 for(i in {holographer:1,neuroscanner:1,rover:1}) {
  state.ship[i] = 1 + state.mission_len;
 }
-state.months = 10 + (state.mission_len + 1);
+state.months = 10 * (state.mission_len + 1);
 console.log(JSON.stringify(state));
 return { next_state: p201 };
 }
 function p201() {
 pandora_log(201,'Outfitted, checked and rechecked, the <em>Pandora</em> departs from the Watkins Memorial Exploration Depot in the Creighton System. '
-+'The FTL drive is activated and the mission heads for the first planet in its assigned exploration sector. '
-+'Choose a planet on the Interstellar Display to conduct Interstellar Movement.');
-return { next_state: p201a, type:'planet' };
++'The FTL drive is activated and the mission heads for the first planet in its assigned exploration sector.');
+return { next_state: p201a, type:'planet', prompt:'Choose a planet on the Interstellar Display to conduct Interstellar Movement.' };
 }
 function p201a(distance) {
  state.last_distance = distance;
  state.months -= distance;
- if (roll2d6() <= distance) switch(roll2d6()) {
+ if (roll2d6() <= distance)
+ switch(3) {
+// switch(roll2d6()) {
   case 2: return { next_state: p080 };
   case 3: return { next_state: p061 };
   case 4: return { next_state: p055 };
@@ -262,11 +270,11 @@ function p201a(distance) {
 }
 function p201b() {
  pandora_log(201, "Planet Table");
- return { next_state: p999 };
+ return { next_state: p999, type: 'ok' };
 }
 function p999() {
  pandora_log(0, "GAME OVER");
- return { next_state: p999 };
+ return { next_state: p999, type: 'ok' };
 }
 function p080() {
  if (!hasCreature()) return { next_state: p201b };
@@ -274,10 +282,10 @@ function p080() {
  pandora_log(80,"Immediately after coming out of FTL, "+creature_names[crt]+", a creature aboard the Pandora suddenly evolves into a highly aggressive, powerful, intelligent being.");
  if (creatureCmb(crt) > 6 & creatureInt(crt) > 6) { //p081
   pandora_log(81,"The creature easily escapes from its restraint pod, neutralizes all bots, kills all characters, and takes over the Pandora to fulfill a destiny unknown to us. The game is over.");
-  return { next_state: p999 };
+  return { next_state: p999, type:'ok' };
  } else if (creatureCmb(crt) > 7 && creatureInt(crt) < 6) { //p082
   pandora_log(82,"The creature goes on a rampage of destruction, reducing the Pandora to a hunk of twisted metal, as the creature and all aboard are killed. The game is over.");
-  return { next_state: p999 };
+  return { next_state: p999, type:'ok' };
  } else if ((creatureCmb(crt) == 6 || creatureCmb(crt) == 7) && creatureInt(crt) < 6) { //p083
   var result = numCreatures()/3|0;
   var txt = creature_names[crt];
@@ -307,10 +315,10 @@ function p080() {
    pandora_log(84,txt + (result > 1?" are":" is") + " killed before the creature is destroyed.");
   } else {
    pandora_log(84,txt + " The creature kills all characters. The game is over.");
-   return { next_state: p999 };
+   return { next_state: p999, type:'ok' };
   }
  }
- return { next_state: p201b };
+ return { next_state: p201b, type:'ok' };
 }
 function p061() {
    var txt = "After coming out of FTL, the <em>Pandora</em> is intercepted by a small fleet of renegade free traders who insist on inspecting her cargo.";
@@ -330,23 +338,26 @@ function p061() {
     } else if (result < 2) { //p203
      txt += " The commander attempts to bargain with the pirates in the hopes that they will be satisfied with a small part of the cargo.";
      pandora_log(169,txt);
-     txt = "The pirates will depart if they are given one of every type of bot and tool aboard the Pandora. Does this sounds reasonable?";
+     txt = "The pirates will depart if they are given one of every type of bot and tool aboard the Pandora.";
      pandora_log(203,txt);
-     //TODO: ask yes/no
-     var result = 1;
-     if(result) {
+     return { next_state: p203, type:'yesno', prompt:'Does this sounds reasonable?' };
+    } else {
+     pandora_log(169,txt);
+     return { next_state: p183, type:'ok' };
+    }
+   } 
+   return { next_state: p201b, type:'ok' };
+}
+function p203(ok) {
+     if(ok) {
       for (var i in state.ship) if(isToolOrBot(i)) {
        state.ship[i]--;
        if (!state.ship[i]) delete(state.ship[i]);
       }
+      return { next_state: p201b };
      } else {
       return { next_state: p183 };
      }
-    } else {
-     return { next_state: p183 };
-    }
-   } 
-   return { next_state: p201b };
 }
 function p183() {
      var txt = "All-out combat with the pirates is the only choice left.";
@@ -354,13 +365,9 @@ function p183() {
       case 1: case 2: case 3:
        var result = roll2d6();
        txt += " The pirates are driven off.";
-       txt += " " + result + " Endurance Points are lost by the other crew members.";
+       txt += " " + result + " Endurance Points are lost by the crew members.";
        pandora_log(183, txt);
-       // TODO: assign_damage(crew member)
-       state.months--;
-       txt = " One extra Tour Month is expended repairing slight damage to the Pandora.";
-       pandora_log(183, txt);
-       break;
+       return { next_state: p183b, type:'damage', crewonly:true }
       case 4: case 5: //p191
        pandora_log(183,txt);
        txt = "After a hard-fought battle, the pirates retreat.";
@@ -388,13 +395,21 @@ function p183() {
         txt += " "+['One','Two','Three','Four','Five','Six'][result-1]+" extra Tour Month"+(result!=1?"s are":" is")+" expended repairing the Pandora."
        }
        pandora_log(191, txt);
-       break;
+       return { next_state: p201b };
       case 6:
        txt += " The pirates trash the Pandora and capture or kill all characters. The mission is over.";
        pandora_log(183, txt);
        return { next_state: p999 };
      }
-   return { next_state: p201b };
+}
+function p183b(damage) {
+  //for (var i in damage) {
+  //}
+  // TODO: apply damage
+  state.months--;
+  txt = " One extra Tour Month is expended repairing slight damage to the Pandora.";
+  pandora_log(183, txt);
+  return { next_state: p201b, type: 'ok' };
 }
 function p055() {
    function reduceRating(who, what, howMuch) {
@@ -414,7 +429,7 @@ function p055() {
     txt += " The character is no longer considered capable of fulfilling his duties. The character may be used on any expedition, but the officer function he performed no longer exists."
    }
    pandora_log(55,txt);
-   return { next_state: p201b };
+   return { next_state: p201b, type:'ok' };
 }
 function p049() {
    var txt = "As the <em>Pandora</em> comes out of FTL, it encounters an asteroid storm.";
@@ -426,19 +441,19 @@ function p049() {
    txt += " "+['No','One','Two','Three','Four'][result]+" extra Tour Month"+(result!=1?"s are":" is")+" expended repairing damage caused by the hurling planetoids."
    state.months -= result;
    pandora_log(49,txt);
-   return { next_state: p201b };
+   return { next_state: p201b, type:'ok' };
 }
 function p046() {
    state.months--;
    pandora_log(46,"Star flares cause disturbances in faster-than-light travel routes: one extra Tour Month is expended for the current interstellar jump.");
-   return { next_state: p201b };
+   return { next_state: p201b, type:'ok' };
 }
 function p001() {
    if (state.last_distance > 1) {
     state.months--;
     pandora_log(1,'Navigational error has put the Pandora slightly off course; one extra tour month is expended.');
    }
-   return { next_state: p201b };
+   return { next_state: p201b, type:'ok' };
 }
 function p044() {
    var result, txt = "The interstellar jump puts an unexpected strain on the <em>Pandora</em>'s FTL systems.";
@@ -453,7 +468,7 @@ function p044() {
    }
    pandora_log(44,txt);
    state.months -= result;
-   return { next_state: p201b };
+   return { next_state: p201b, type:'ok' };
 }
 function p047() {
    var txt = "The Fuji 5500 Central Processor is on the blink. Before the planet that the Pandora is orbiting can be surveyed, the system must be put right.";
@@ -465,7 +480,7 @@ function p047() {
    txt += " "+['No','One','Two','Three','Four'][result]+" extra Tour Month"+(result!=1?"s are":" is")+" expended getting the computer up again."
    state.months -= result;
    pandora_log(47,txt);
-   return { next_state: p201b };
+   return { next_state: p201b, type:'ok' };
 }
 function p052() {
    if (hasCreature()) {
@@ -473,18 +488,25 @@ function p052() {
      delete(state.ship[crt]);
      pandora_log(52,creature_names[crt] + ", a creature aboard the Pandora has life support needs not detected by <em>Pandora</em> exobiological analysis equipment."
      +" Despite the crew's efforts to discover the missing (or unhealthy) element in its artificial environment, the creature dies.");
+     return { next_state: p201b, type:'ok' };
    }
    return { next_state: p201b };
 }
-function p058() {
-   if (hasScienceOfficer() && !isEmpty(state.worlds_visited)) {
-    var txt = "Exposure to undetected extraterrestrial virus strains drives the science officer space crazy.";
-    var result = state.team.sci.int - roll1d6();
-    if (result > 0) {
-      txt += " " + result + " Endurance Points are lost by the other crew members."
+function p058(who) {
+  var who = who || 'sci';
+  if (isEmpty(state.worlds_visited) || !hasTeamMember(who)) return { next_state: p201b };
+  var txt = "Exposure to undetected extraterrestrial virus strains drives the science officer space crazy.";
+  var result = state.team.sci.int - roll1d6();
+  pandora_log(58,txt);
+  if (result > 0) {
+    txt += " " + result + " Endurance Points are lost by the other crew members."
       // TODO: assign_damage(crew member, !sci)
-    }
-    pandora_log(58,txt);
+    return { next_state: p058b, type: 'damage', amount:result, exclude:who, crewonly:true };
+  }
+  return { next_state: p058b, type: 'ok' };
+}
+function p058b(damage) {
+  // TODO: assign_damage(crew member, !sci)
      switch (roll1d6()) {
       case 1: case 2: case 3: //para067
        state.months--;
@@ -500,7 +522,7 @@ function p058() {
        }
        break;
       case 6: //para144
-       killTeamMember(who);
+       killTeamMember('sci');
        var txt = "The science officer dies of his mysterious affliction, despite extensive treatment.";
        var result = roll1d6() - 2;
        if (result > 0) {
@@ -513,8 +535,7 @@ function p058() {
        pandora_log(144,txt);
        break;
      }
-   }
-   return { next_state: p201b };
+   return { next_state: p201b, type:'ok' };
 }
 function p064() {
 /* TODO
@@ -543,13 +564,101 @@ any expedition action may be performed. The party may not leave the environ unti
 }
 
 
-var choice = { prompt:"Choose lenght of the mission.", values: [0,1,2], value_names: { 0:"10 months", 1:"20 months", 2:"30 months" }, next_state:p000 }; 
-choice = choice.next_state(2);
-choice = choice.next_state();
-choice = choice.next_state(12);
-var zzz = 0;
-while (choice.next_state != p999 && zzz++ < 100) {
-choice = choice.next_state();
+var choice = { prompt:"Choose length of the mission.", type:'list', values: [0,1,2], value_names: { 0:"10 months", 1:"20 months", 2:"30 months" }, next_state:p000 }; 
+//choice = choice.next_state(2);
+//choice = choice.next_state();
+//choice = choice.next_state(12);
+//var zzz = 0;
+//while (choice.next_state != p999 && zzz++ < 100) {
+//choice = choice.next_state();
+//}
+/* display 
+mission log / current actions / mission time
+inventory ship/shuttle/away, character stats
+interstellar map
+planet map / planet stat / planet time
+creature log
+*/
+function display() {
+var tab;
+if (state) {
+tab = "<h3>Time Left: " + state.months + " VP: " + victoryPoints() + "</h3>";
+tab += "<table><tr><th></th>";
+var stats = [ 'cac','kic','wht','prt','spd','int','end'];
+var stats_name = [ 'C','K','W','P','S','I','E' ];
+for (var i = 0; i < stats.length; i++) {
+  tab += "<th>"+stats_name[i]+"</th>";
+}
+for (var who in state.team) {
+tab += "<tr><th>"+member_names[who]+"</th>";
+for (var i = 0; i < stats.length; i++) {
+  var val = state.team[who][stats[i]];
+  if (stats[i] === 'end') {
+    var r = '';
+    for (var j = 0; j < 6; j++) {
+      r += j<val?'■':'□';
+    }
+    val = r;
+  }
+  tab += "<td>"+val+"</td>";
+}
+}
+tab += "</table>";
+console.log(tab);
+document.getElementById("inv").innerHTML = tab;
+var tab = "<h3>Ship</h3>";
+for (var what in state.ship) if (!isTeamMemeber(what)) {
+tab += what + ": " + state.ship[what] + "<br>";
+}
+document.getElementById("inv").innerHTML += tab;
+document.getElementById("log").innerHTML = state.log;
+}
+if (choice.prompt)
+  document.getElementById("log").innerHTML += '<p>'+choice.prompt+'</p>';
+var values = choice.values;
+var value_names = choice.value_names;
+switch (choice.type) {
+  case 'list':
+   break;
+  case 'planet':
+   values = [2,12];
+   value_names = { 2: "close", 12:"far" };
+   break;
+  case 'damage':
+   values = [0];
+   value_names = 'Assigned';
+   break;
+  case 'yesno':
+   values = [true, false];
+   value_names = { true:'Yes', false:'No' };
+   break;
+  case 'ok':
+   values = [0];
+   value_names = { 0: "OK" };
+   break;
+  default:
+   values = [0];
+   value_names = { 0: "Auto" };
+}
+if (values) {
+  tab = "<ul>";
+  for (var i = 0; i < values.length; i++) {
+    tab += '<li onclick="advance('+values[i]+')">' + value_names[values[i]] + "</li>";
+  }
+  tab += "</ul>";
+  document.getElementById("log").innerHTML += tab;
+}
+}
+display();
+function advance(param) {
+  console.log(param);
+  console.log(choice);
+  choice = choice.next_state(param);
+  while (!choice.type) {
+    choice = choice.next_state();
+  }
+  console.log(choice);
+  display();
 }
 
 //onboard actions
