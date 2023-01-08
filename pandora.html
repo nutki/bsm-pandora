@@ -5,7 +5,20 @@
 <body>
 <style>
 body {
-font-family: sans-serif;
+    font-family: sans-serif;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    cursor:default;
+}
+.button {
+    cursor:pointer;
+}
+.button:hover {
+    background-color: yellow;
 }
 div.mdiv {
 float: left;
@@ -61,6 +74,14 @@ function isEmpty(obj) {
             return false;
     return true;
 }
+function tag(type, content, attr) {
+  var attrs = '';
+  for (var i in attr) if (attr.hasOwnProperty(i))
+    attrs += ' '+i+'="'+attr[i]+'"';
+  return '<'+type+attrs+'>'+(content||'')+'</'+type+'>';
+}
+
+
 function roll1d6() {
     return 0|Math.random()*6+1;
 }
@@ -367,7 +388,7 @@ function p183() {
        txt += " The pirates are driven off.";
        txt += " " + result + " Endurance Points are lost by the crew members.";
        pandora_log(183, txt);
-       return { next_state: p183b, type:'damage', crewonly:true }
+       return { next_state: p183b, type:'damage', amount:result, crewonly:true }
       case 4: case 5: //p191
        pandora_log(183,txt);
        txt = "After a hard-fought battle, the pirates retreat.";
@@ -595,7 +616,15 @@ for (var i = 0; i < stats.length; i++) {
   var val = state.team[who][stats[i]];
   if (stats[i] === 'end') {
     var r = '';
-    for (var j = 0; j < 6; j++) {
+    if (1 || choice.type == 'damage' && !(choice.exclude && who in choice.exclude)) {
+      var cur = choice.result ? choice.result[who] || 0 : 0;
+      console.log(who+cur);
+      for (var j = 0; j < 6; j++) {
+        if (j < val) {
+	r += '<span class="button" style="color:'+(j<val-cur?'black':'red')+'" onclick="console.log(choice.result);choice.result.'+who+'='+(cur==val-j?0:val-j)+';display();">■</span>';
+	} else r += '□';
+      } 
+    } else for (var j = 0; j < 6; j++) {
       r += j<val?'■':'□';
     }
     val = r;
@@ -614,7 +643,7 @@ document.getElementById("inv").innerHTML += tab;
 document.getElementById("log").innerHTML = state.log;
 }
 if (choice.prompt)
-  document.getElementById("log").innerHTML += '<p>'+choice.prompt+'</p>';
+  document.getElementById("log").innerHTML += tag('p',choice.prompt);
 var values = choice.values;
 var value_names = choice.value_names;
 switch (choice.type) {
@@ -625,8 +654,9 @@ switch (choice.type) {
    value_names = { 2: "close", 12:"far" };
    break;
   case 'damage':
-   values = [0];
-   value_names = 'Assigned';
+   values = ['choice.result'];
+   value_names = { 'choice.result': 'Assigned' };
+   choice.param = {};
    break;
   case 'yesno':
    values = [true, false];
@@ -641,11 +671,11 @@ switch (choice.type) {
    value_names = { 0: "Auto" };
 }
 if (values) {
-  tab = "<ul>";
+  tab = '';
   for (var i = 0; i < values.length; i++) {
-    tab += '<li onclick="advance('+values[i]+')">' + value_names[values[i]] + "</li>";
+    tab += tag('li', value_names[values[i]], {class:'button',onclick:'advance('+values[i]+')'});
   }
-  tab += "</ul>";
+  tab = tag('ul',tab);
   document.getElementById("log").innerHTML += tab;
 }
 }
@@ -657,6 +687,7 @@ function advance(param) {
   while (!choice.type) {
     choice = choice.next_state();
   }
+  choice.result = {};
   console.log(choice);
   display();
 }
