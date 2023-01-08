@@ -41,7 +41,7 @@ function isEmpty(obj) {
             return false;
     return true;
 }
-function tag(type, content, attr) {
+function tag(type, content, attr?) {
   var attrs = '';
   for (var i in attr) if (attr.hasOwnProperty(i))
     attrs += ' '+i+'="'+attr[i]+'"';
@@ -55,7 +55,7 @@ function roll1d6() {
 function roll2d6() {
     return roll1d6() + roll1d6();
 }
-function chooseRandom(fcn,where) {
+function chooseRandom(fcn,where?) {
     var obj = state[where || state.location];
     var size = 0, key;
     for (key in obj) {
@@ -68,28 +68,28 @@ function chooseRandom(fcn,where) {
     }
     return key;
 }
-function hasTeamMember(who, where) {
+function hasTeamMember(who, where?) {
     return state[where || state.location][who] && state.team[who].int > 2;
 }
-function hasMaintenanceOfficer(where) {
+function hasMaintenanceOfficer(where?) {
     return hasTeamMember('mnt', where);
 }
-function hasScienceOfficer(where) {
+function hasScienceOfficer(where?) {
     return hasTeamMember('sci', where);
 }
-function hasMedicalOfficer(where) {
+function hasMedicalOfficer(where?) {
     return hasTeamMember('med', where);
 }
-function hasWeaponsOfficer(where) {
+function hasWeaponsOfficer(where?) {
     return hasTeamMember('wpn', where);
 }
-function hasCommander(where) {
+function hasCommander(where?) {
     return hasTeamMember('cmd', where);
 }
 function isTeamMemeber(who) {
     return who in member_names;
 }
-function numTeamMembers(where) {
+function numTeamMembers(where?) {
     var result = 0;
     for (var who in member_names)
 	if (who in state[where || state.location])
@@ -114,12 +114,12 @@ function isToolOrBot(what) {
 function isCreature(what) {
     return what.substr(0,4) == 'crt_';
 }
-function hasCreature(where) {
+function hasCreature(where?) {
     for (var i in state[where || state.location])
 	if (isCreature(i)) return true;
     return false;
 }
-function numCreatures(where) {
+function numCreatures(where?) {
     var result = 0;
     for (var i in state[where || state.location])
 	if (isCreature(i)) result++;
@@ -159,7 +159,7 @@ function killTeamMember(who) {
 function victoryPoints() {
     var result = state.extra_vp;
     for (var i in state.creature_log) if (state.creature_log.hasOwnProperty(i))
-	for (var j in i) if (i.hasOwnProperty(j))
+	for (var j in state.creatur_log[i]) if (state.creatur_log[i].hasOwnProperty(j))
 	    result++;
     for (var i in state.ship) if (state.ship.hasOwnProperty(i)) {
 	if (isCreature(i)) {
@@ -212,19 +212,19 @@ state = {
  mission_len: 2, // 10+l*10
  last_distance: 0,
 }
-for(i in state.team) {
+for(const i in state.team) {
  state.team[i].int = 6 + roll1d6() / 2 | 0;
  state.ship[i] = 1;
 }
 state.ship.enviorig = [7,11,14][state.mission_len];
 state.ship.armorig = [5,8,10][state.mission_len];
-for(i in {specibot:1,reconbot:1,ambot:1,imrebot:1}) {
+for(const i in {specibot:1,reconbot:1,ambot:1,imrebot:1}) {
  state.ship[i] = [3,5,6][state.mission_len];
 }
-for(i in {botkit:1,toolkit:1,medkit:1,scanner:1,turbolaser:1,netgun:1,climbkit:1}) {
+for(const i in {botkit:1,toolkit:1,medkit:1,scanner:1,turbolaser:1,netgun:1,climbkit:1}) {
  state.ship[i] = 2 + state.mission_len;
 }
-for(i in {holographer:1,neuroscanner:1,rover:1}) {
+for(const i in {holographer:1,neuroscanner:1,rover:1}) {
  state.ship[i] = 1 + state.mission_len;
 }
 state.months = 10 * (state.mission_len + 1);
@@ -240,7 +240,7 @@ function p201a(distance) {
  state.last_distance = distance;
  state.months -= distance;
  if (roll2d6() <= distance)
- switch(3) {
+ switch(3 as number) {
 // switch(roll2d6()) {
   case 2: return { next_state: p080 };
   case 3: return { next_state: p061 };
@@ -268,7 +268,7 @@ function p080() {
  if (!hasCreature()) return { next_state: p201b };
  var crt = chooseRandom(isCreature);
  pandora_log(80,"Immediately after coming out of FTL, "+creature_names[crt]+", a creature aboard the Pandora suddenly evolves into a highly aggressive, powerful, intelligent being.");
- if (creatureCmb(crt) > 6 & creatureInt(crt) > 6) { //p081
+ if (creatureCmb(crt) > 6 && creatureInt(crt) > 6) { //p081
   pandora_log(81,"The creature easily escapes from its restraint pod, neutralizes all bots, kills all characters, and takes over the Pandora to fulfill a destiny unknown to us. The game is over.");
   return { next_state: p999, type:'ok' };
  } else if (creatureCmb(crt) > 7 && creatureInt(crt) < 6) { //p082
@@ -362,7 +362,7 @@ function p183() {
        result = roll1d6();
        if (result < numTeamMembers()) {
 	txt += " The ";
-	for (var first = true, i = result; i--; first = false) {
+	for (let first = true, i = result; i--; first = false) {
         var who = chooseRandom(isTeamMemeber);
          if (!first) txt += i ? ", " : " and ";
          txt += "the " + member_names[who];
@@ -373,7 +373,7 @@ function p183() {
         pandora_log(191,txt + " All characters are killed in the battle. The game is over.");
         return { next_state: p999 };
        }
-       for (var i in state.ship) if(isWeaponOrBot(i)) {
+       for (const i in state.ship) if(isWeaponOrBot(i)) {
         state.ship[i]--;
         if (!state.ship[i]) delete(state.ship[i]);
        }
@@ -395,7 +395,7 @@ function p183b(damage) {
   //}
   // TODO: apply damage
   state.months--;
-  txt = " One extra Tour Month is expended repairing slight damage to the Pandora.";
+  const txt = "One extra Tour Month is expended repairing slight damage to the Pandora.";
   pandora_log(183, txt);
   return { next_state: p201b, type: 'ok' };
 }
@@ -552,7 +552,7 @@ any expedition action may be performed. The party may not leave the environ unti
 }
 
 
-var choice = { prompt:"Choose length of the mission.", type:'list', values: [0,1,2], value_names: { 0:"10 months", 1:"20 months", 2:"30 months" }, next_state:p000 }; 
+var choice = { prompt:"Choose length of the mission.", type:'list', values: [0,1,2], value_names: { 0:"10 months", 1:"20 months", 2:"30 months" }, next_state:p000 } as any; 
 //choice = choice.next_state(2);
 //choice = choice.next_state();
 //choice = choice.next_state(12);
@@ -601,16 +601,16 @@ for (var i = 0; i < stats.length; i++) {
 }
 tab += "</table>";
 console.log(tab);
-document.getElementById("inv").innerHTML = tab;
-var tab = "<h3>Ship</h3>";
+document.getElementById("inv")!.innerHTML = tab;
+tab = "<h3>Ship</h3>";
 for (var what in state.ship) if (!isTeamMemeber(what)) {
 tab += what + ": " + state.ship[what] + "<br>";
 }
-document.getElementById("inv").innerHTML += tab;
-document.getElementById("log").innerHTML = state.log;
+document.getElementById("inv")!.innerHTML += tab;
+document.getElementById("log")!.innerHTML = state.log;
 }
 if (choice.prompt)
-  document.getElementById("log").innerHTML += tag('p',choice.prompt);
+  document.getElementById("log")!.innerHTML += tag('p',choice.prompt);
 var values = choice.values;
 var value_names = choice.value_names;
 switch (choice.type) {
@@ -643,7 +643,7 @@ if (values) {
     tab += tag('li', value_names[values[i]], {class:'button',onclick:'advance('+values[i]+')'});
   }
   tab = tag('ul',tab);
-  document.getElementById("log").innerHTML += tab;
+  document.getElementById("log")!.innerHTML += tab;
 }
 }
 display();
