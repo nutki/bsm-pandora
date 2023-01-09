@@ -1,5 +1,18 @@
+type Bot = 'specibot' | 'reconbot' | 'ambot' | 'imrebot';
+type Weapon = 'turbolaser' | 'netgun' | 'stunbomb';
+type Tool = Weapon | 'botkit' | 'toolkit' | 'medkit' | 'scanner' | 'climbkit' | 'holographer' | 'neuroscanner' | 'rover' | 'enviorig' | 'armorig' | 'ecage';
+type Creature = `crt_${number}`;
+type Artifact = `art_${number}`;
+type Crew = 'cmd' | 'nav' | 'med' | 'mnt' | 'gsv' | 'sci' | 'wpn';
+type Entity = Bot | Tool | Creature | Crew | Artifact;
 
-function pandora_log(num, txt) {
+type Place = 'ship' | 'shuttle' | 'away';
+type Inventory = Map<Entity, number>;
+
+type CrewStat = 'cac' | 'kic' | 'wht' | 'prt' | 'spd' | 'end' | 'int';
+type CreatureStat = 'int' | 'cmb' | 'agr' | 'spd';
+
+function pandora_log(num: number, txt: string) {
 state.log += '<p>' + txt + '</p>';
 }
 
@@ -55,117 +68,132 @@ function roll1d6() {
 function roll2d6() {
     return roll1d6() + roll1d6();
 }
-function chooseRandom(fcn,where?) {
-    var obj = state[where || state.location];
-    var size = 0, key;
-    for (key in obj) {
-        if (obj.hasOwnProperty(key) && fcn(key)) size += obj[key];
-    }
-    var res = 0|Math.random() * size;
-    for (key in obj) {
-        if (obj.hasOwnProperty(key) && fcn(key)) size -= obj[key];
-        if (size <= res) break;
-    }
-    return key;
+function inventory<T extends Entity>(fcn: (e: Entity) => e is T, where?: Place): T[];
+function inventory(fcn: (e: Entity) => boolean, where?: Place): Entity[];
+function inventory(fcn: (e: Entity) => boolean, where: Place = state.location): Entity[] {
+        const res: Entity[] = [];
+        for (const [key, value] of state[where]) {
+            if (fcn(key)) for(let i = 0; i < value; i++) res.push(key);
+        }        
+        return res;
 }
-function hasTeamMember(who, where?) {
+function inventoryCount<T extends Entity>(fcn: (e: Entity) => e is T, where: Place = state.location) {
+        let res = 0;
+        for (const [key, value] of state[where]) {
+                if (fcn(key)) res += value;
+        }        
+        return res;
+}
+function inventoryInc(inv: Inventory, key: Entity, amount: number = 1) {
+        const v = (inv.get(key) || 0) - amount;
+        if (v) inv.set(key, v);
+        else inv.delete(key);
+        return v;
+}
+function inventoryDec(inv: Inventory, key: Entity, amount: number = 1) {
+        return inventoryInc(inv, key, -amount);
+}
+function chooseRandom<T extends Entity>(fcn: (e: Entity) => e is T,where?: Place): T | undefined {
+    var inv = inventory(fcn, where);
+    var res = 0|Math.random() * inv.length;
+    return inv[res];
+}
+function hasTeamMember(who: Crew, where?: Place) {
     return state[where || state.location][who] && state.team[who].int > 2;
 }
-function hasMaintenanceOfficer(where?) {
+function hasMaintenanceOfficer(where?: Place) {
     return hasTeamMember('mnt', where);
 }
-function hasScienceOfficer(where?) {
+function hasScienceOfficer(where?: Place) {
     return hasTeamMember('sci', where);
 }
-function hasMedicalOfficer(where?) {
+function hasMedicalOfficer(where?: Place) {
     return hasTeamMember('med', where);
 }
-function hasWeaponsOfficer(where?) {
+function hasWeaponsOfficer(where?: Place) {
     return hasTeamMember('wpn', where);
 }
-function hasCommander(where?) {
+function hasCommander(where?: Place) {
     return hasTeamMember('cmd', where);
 }
-function isTeamMemeber(who) {
+function isTeamMemeber(who: Entity): who is Crew {
     return who in member_names;
 }
-function numTeamMembers(where?) {
+function numTeamMembers(where?: Place) {
     var result = 0;
     for (var who in member_names)
 	if (who in state[where || state.location])
 	    result++;
     return result;
 }
-function isBot(what) {
+function isBot(what: Entity) {
     return what in {specibot:1,reconbot:1,ambot:1,imrebot:1};
 }
-function isWeapon(what) {
+function isWeapon(what: Entity) {
     return what in {turbolaser:1,netgun:1,stunbomb:1};
 }
-function isTool(what) {
+function isTool(what: Entity) {
     return what in {botkit:1,toolkit:1,medkit:1,scanner:1,turbolaser:1,netgun:1,climbkit:1,holographer:1,neuroscanner:1,rover:1,enviorig:1,armorig:1,stunbomb:1,ecage:1};
 }
-function isWeaponOrBot(what) {
+function isWeaponOrBot(what: Entity) {
     return isWeapon(what) || isBot(what);
 }
-function isToolOrBot(what) {
+function isToolOrBot(what: Entity) {
     return isBot(what) || isTool(what);
 }
-function isCreature(what) {
-    return what.substr(0,4) == 'crt_';
+function isArtifact(what: Entity): what is Creature {
+    return what.substring(0,4) == 'art_';
 }
-function hasCreature(where?) {
-    for (var i in state[where || state.location])
-	if (isCreature(i)) return true;
-    return false;
+function isCreature(what: Entity): what is Creature {
+    return what.substring(0,4) == 'crt_';
 }
-function numCreatures(where?) {
-    var result = 0;
-    for (var i in state[where || state.location])
-	if (isCreature(i)) result++;
-    return result;
+function hasCreature(where?: Place) {
+        return inventoryCount(isCreature, where) > 0;
 }
-var creature_modifiers = {
+function numCreatures(where?: Place) {
+        return inventoryCount(isCreature, where);
+}
+var creature_modifiers: Record<Creature, Partial<Record<CreatureStat | 'bvp', number>>> = {
     crt_007: { int:-3, cmb: 1, agr: 1, spd: 3, bvp:5 },
 }
-var creature_names = {
+var creature_names: Record<Creature, string> = {
     crt_007: 'Drada',
 }
-function calculateCreatureStat(c, stat) {
+function calculateCreatureStat(c: Creature, stat: CreatureStat) {
     var mods = creature_modifiers[c];
     if (!(stat in mods)) return 0;
-    var mod = mods[stat];
+    var mod = mods[stat]!;
     var result = roll2d6() + mod - 2;
     if (result < 1) result = 1;
     else if (result > 9) result = [9,9,10,10,11,12][roll1d6()-1];
     return result;
 }
-function creatureStat(c, stat) {
+function creatureStat(c: Creature, stat: CreatureStat) {
     if (!(c in state.creature_log)) state.creature_log[c] = {};
-    if (!(stat in state.creature_log[c])) state.creature_log[c][stat] = calculateCreatureStat(c, stat);
-    return state.creature_log[c][stat];
+    if (!(stat in state.creature_log[c]!)) state.creature_log[c]![stat] = calculateCreatureStat(c, stat);
+    return state.creature_log[c]![stat]!;
 }
-function creatureInt(c) { return creatureStat(c, 'int'); }
-function creatureAgr(c) { return creatureStat(c, 'agr'); }
-function creatureSpd(c) { return creatureStat(c, 'spd'); }
-function creatureCmb(c) { return creatureStat(c, 'cmb'); }
-function killTeamMember(who) {
+function creatureInt(c: Creature) { return creatureStat(c, 'int'); }
+function creatureAgr(c: Creature) { return creatureStat(c, 'agr'); }
+function creatureSpd(c: Creature) { return creatureStat(c, 'spd'); }
+function creatureCmb(c: Creature) { return creatureStat(c, 'cmb'); }
+function killTeamMember(who: Crew) {
     state.team[who].end = 0;
-    delete(state.ship[who]);
-    delete(state.shuttle[who]);
-    delete(state.away[who]);
+    inventoryDec(state.ship, who);
+    inventoryDec(state.shuttle, who);
+    inventoryDec(state.away, who);
     state.extra_vp -= 4;
 }
 function victoryPoints() {
     var result = state.extra_vp;
     for (var i in state.creature_log) if (state.creature_log.hasOwnProperty(i))
-	for (var j in state.creatur_log[i]) if (state.creatur_log[i].hasOwnProperty(j))
+	for (var j in state.creature_log[i]) if (state.creature_log[i].hasOwnProperty(j))
 	    result++;
-    for (var i in state.ship) if (state.ship.hasOwnProperty(i)) {
+        const inv = inventory(() => true, 'ship');
+    for (const [i] of state.ship) {
 	if (isCreature(i)) {
 	    result++;
-	    if ('bvp' in creature_modifiers[i])
-		result += creature_modifiers[i].bvp;
+	        result += creature_modifiers[i].bvp || 0;
 	}
 //	if (isArtifact(i)) TODO
 	if (isTeamMemeber(i)) {
@@ -173,13 +201,13 @@ function victoryPoints() {
 	}
 // TODO: count good tools in all locations, possibly remove points (rover, bots for all, other per type)
     }
-    for (var i in state.worlds_visited) if (state.worlds_visited.hasOwnProperty(i))
+    for (const i in state.worlds_visited)
 	result++;
     if (state.months < 0)
 	result += state.months * 5;
     return result;
 }
-var member_names = {
+var member_names: Record<Crew, string> = {
  cmd: 'commander',
  nav: 'navigator',
  med: 'medical officer',
@@ -188,47 +216,60 @@ var member_names = {
  sci: 'science officer',
  wpn: 'weapons officer',
 }
-var state;
+type State = {
+        log: string;
+        team: Record<Crew, Record<CrewStat, number>>
+        location: Place
+        creature_log: Partial<Record<Creature, Partial<Record<CreatureStat, number>>>>
+        worlds_visited: Record<string, 1>
+        extra_vp: number;
+        mission_len: 0 | 1 | 2;
+        last_distance: number;
+        months: number;
+} & Record<Place, Inventory>
+var state: State;
+
+function toMap<K extends string, V>(a: Record<K, V>) {
+        return new Map(Object.entries(a) as [K, V][]);
+}
 
 function p000() {
 state = {
  log:'',
  team: {
-  cmd: { cac:3,kic:3,wht:5,prt:5,spd:8,end:6 },
-  nav: { cac:3,kic:2,wht:6,prt:6,spd:7,end:6 },
-  med: { cac:3,kic:2,wht:6,prt:5,spd:6,end:6 },
-  mnt: { cac:3,kic:2,wht:6,prt:6,spd:9,end:6 },
-  gsv: { cac:3,kic:2,wht:7,prt:6,spd:6,end:6 },
-  sci: { cac:4,kic:2,wht:6,prt:5,spd:6,end:6 },
-  wpn: { cac:4,kic:3,wht:7,prt:7,spd:8,end:6 },
+  cmd: { cac:3,kic:3,wht:5,prt:5,spd:8,end:6, int: 6 },
+  nav: { cac:3,kic:2,wht:6,prt:6,spd:7,end:6, int: 6 },
+  med: { cac:3,kic:2,wht:6,prt:5,spd:6,end:6, int: 6 },
+  mnt: { cac:3,kic:2,wht:6,prt:6,spd:9,end:6, int: 6 },
+  gsv: { cac:3,kic:2,wht:7,prt:6,spd:6,end:6, int: 6 },
+  sci: { cac:4,kic:2,wht:6,prt:5,spd:6,end:6, int: 6 },
+  wpn: { cac:4,kic:3,wht:7,prt:7,spd:8,end:6, int: 6 },
  },
- ship: { 'crt_007': 1},
- shuttle: {},
- away: {},
+ ship: new Map([[ 'crt_007', 1]]),
+ shuttle: new Map(),
+ away: new Map(),
  location: 'ship',
  creature_log: {},
  worlds_visited: { 'Opoplo':1 },
  extra_vp: 0,
  mission_len: 2, // 10+l*10
  last_distance: 0,
+ months: 30,
 }
-for(const i in state.team) {
- state.team[i].int = 6 + roll1d6() / 2 | 0;
- state.ship[i] = 1;
+for(const [i, v] of toMap(state.team)) {
+ v.int = 6 + roll1d6() / 2 | 0;
+ state.ship.set(i, 1);
 }
-state.ship.enviorig = [7,11,14][state.mission_len];
-state.ship.armorig = [5,8,10][state.mission_len];
-for(const i in {specibot:1,reconbot:1,ambot:1,imrebot:1}) {
- state.ship[i] = [3,5,6][state.mission_len];
+state.ship.set('enviorig', [7,11,14][state.mission_len]);
+state.ship.set('armorig', [5,8,10][state.mission_len]);
+for(const [i] of toMap({specibot:1,reconbot:1,ambot:1,imrebot:1})) {
+ state.ship.set(i, [3,5,6][state.mission_len]);
 }
-for(const i in {botkit:1,toolkit:1,medkit:1,scanner:1,turbolaser:1,netgun:1,climbkit:1}) {
- state.ship[i] = 2 + state.mission_len;
-}
-for(const i in {holographer:1,neuroscanner:1,rover:1}) {
- state.ship[i] = 1 + state.mission_len;
+for(const [i, j] of toMap({botkit:2,toolkit:2,medkit:2,scanner:2,turbolaser:2,netgun:2,climbkit:2,holographer:1,neuroscanner:1,rover:1})) {
+ state.ship.set(i, j + state.mission_len);
 }
 state.months = 10 * (state.mission_len + 1);
-console.log(JSON.stringify(state));
+console.log(state);
 return { next_state: p201 };
 }
 function p201() {
@@ -265,8 +306,8 @@ function p999() {
  return { next_state: p999, type: 'ok' };
 }
 function p080() {
- if (!hasCreature()) return { next_state: p201b };
- var crt = chooseRandom(isCreature);
+ const crt = chooseRandom(isCreature) as Creature;
+ if (!crt) return { next_state: p201b };
  pandora_log(80,"Immediately after coming out of FTL, "+creature_names[crt]+", a creature aboard the Pandora suddenly evolves into a highly aggressive, powerful, intelligent being.");
  if (creatureCmb(crt) > 6 && creatureInt(crt) > 6) { //p081
   pandora_log(81,"The creature easily escapes from its restraint pod, neutralizes all bots, kills all characters, and takes over the Pandora to fulfill a destiny unknown to us. The game is over.");
@@ -277,28 +318,32 @@ function p080() {
  } else if ((creatureCmb(crt) == 6 || creatureCmb(crt) == 7) && creatureInt(crt) < 6) { //p083
   var result = numCreatures()/3|0;
   var txt = creature_names[crt];
-  delete(state.ship[crt]);
+  inventoryDec(state.ship, crt);
   for(var i = result; i--;) {
-    crt = chooseRandom(isCreature);
-    delete(state.ship[crt]);
+    const crt = chooseRandom(isCreature);
+    if (crt) {
+  inventoryDec(state.ship, crt);
     txt += i ? ", ":", and ";
     txt += creature_names[crt];
+    }
   }
   txt += result ? " are" : " is";
   pandora_log(82,"The creature destroys the pod in which he is restrained. "+txt+" destroyed.");
  } else { //p084
   var txt = "The creature wanders out of its restraint pod looking for human flesh.";
   var result = roll2d6() - Math.max(creatureCmb(crt), creatureInt(crt));
-  delete(state.ship[crt]);
+  inventoryDec(state.ship, crt);
   if (result <= 0) {
    pandora_log(84, txt + " The specimen is destroyed without doing harm.");
   } else if (result < numTeamMembers()) {
    txt += " The ";
    for (var first = true, i = result; i--; first = false) {
     var who = chooseRandom(isTeamMemeber);
+    if (who) {
     if (!first) txt += i ? ", " : " and ";
     txt += "the " + member_names[who];
     killTeamMember(who);
+    }
    }
    pandora_log(84,txt + (result > 1?" are":" is") + " killed before the creature is destroyed.");
   } else {
@@ -328,7 +373,7 @@ function p061() {
      pandora_log(169,txt);
      txt = "The pirates will depart if they are given one of every type of bot and tool aboard the Pandora.";
      pandora_log(203,txt);
-     return { next_state: p203, type:'yesno', prompt:'Does this sounds reasonable?' };
+     return { next_state: p203, type:'yesno', prompt:'Does this sound reasonable?' };
     } else {
      pandora_log(169,txt);
      return { next_state: p183, type:'ok' };
@@ -338,10 +383,7 @@ function p061() {
 }
 function p203(ok) {
      if(ok) {
-      for (var i in state.ship) if(isToolOrBot(i)) {
-       state.ship[i]--;
-       if (!state.ship[i]) delete(state.ship[i]);
-      }
+      for (const i of inventory(isToolOrBot)) inventoryDec(state.ship, i);
       return { next_state: p201b };
      } else {
       return { next_state: p183 };
@@ -364,19 +406,18 @@ function p183() {
 	txt += " The ";
 	for (let first = true, i = result; i--; first = false) {
         var who = chooseRandom(isTeamMemeber);
+        if (who) {
          if (!first) txt += i ? ", " : " and ";
          txt += "the " + member_names[who];
          killTeamMember(who);
+        }
 	}
         txt += (result > 1?" are":" is") + " killed.";
        } else {
         pandora_log(191,txt + " All characters are killed in the battle. The game is over.");
         return { next_state: p999 };
        }
-       for (const i in state.ship) if(isWeaponOrBot(i)) {
-        state.ship[i]--;
-        if (!state.ship[i]) delete(state.ship[i]);
-       }
+       for (const i of inventory(isWeaponOrBot)) inventoryDec(state.ship, i);
        result = roll1d6();
        if (hasMaintenanceOfficer()) result -= 2;
        if (result > 0) {
@@ -400,10 +441,11 @@ function p183b(damage) {
   return { next_state: p201b, type: 'ok' };
 }
 function p055() {
-   function reduceRating(who, what, howMuch) {
+   function reduceRating(who: Crew, what: CrewStat, howMuch: number) {
     state.team[who][what] = Math.max(1, state.team[who][what] - howMuch);
    }
    var who = chooseRandom(isTeamMemeber);
+   if (who) {
    var txt = "A malfunction in the jump-sleep revival mechanism causes permanent brain damage to the " + member_names[who] + "."
    reduceRating(who, 'cac', 1);
    reduceRating(who, 'kic', 1);
@@ -417,6 +459,7 @@ function p055() {
     txt += " The character is no longer considered capable of fulfilling his duties. The character may be used on any expedition, but the officer function he performed no longer exists."
    }
    pandora_log(55,txt);
+   }
    return { next_state: p201b, type:'ok' };
 }
 function p049() {
@@ -471,9 +514,9 @@ function p047() {
    return { next_state: p201b, type:'ok' };
 }
 function p052() {
-   if (hasCreature()) {
-     var crt = chooseRandom(isCreature);
-     delete(state.ship[crt]);
+   var crt = chooseRandom(isCreature);
+        if (crt) {
+                inventoryDec(state.ship, crt);
      pandora_log(52,creature_names[crt] + ", a creature aboard the Pandora has life support needs not detected by <em>Pandora</em> exobiological analysis equipment."
      +" Despite the crew's efforts to discover the missing (or unhealthy) element in its artificial environment, the creature dies.");
      return { next_state: p201b, type:'ok' };
@@ -603,8 +646,8 @@ tab += "</table>";
 console.log(tab);
 document.getElementById("inv")!.innerHTML = tab;
 tab = "<h3>Ship</h3>";
-for (var what in state.ship) if (!isTeamMemeber(what)) {
-tab += what + ": " + state.ship[what] + "<br>";
+for (const [what, count] of state.ship) if (!isTeamMemeber(what)) {
+tab += what + ": " + count + "<br>";
 }
 document.getElementById("inv")!.innerHTML += tab;
 document.getElementById("log")!.innerHTML = state.log;
